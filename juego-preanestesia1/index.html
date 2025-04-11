@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Mi Aventura en el Pabellón!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos generales y de animación de fondo */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #aed581, #64b5f6, #fff176, #81c784);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem; /* Añadido padding general */
+        }
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Estilos para el arrastre (drag and drop) */
+        .dragging {
+            opacity: 0.5;
+            cursor: grabbing !important;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+        .drop-zone.drag-over {
+            border-style: solid;
+            border-color: #fbbf24;
+            background-color: #fef9c3;
+        }
+        .drop-zone span, .drop-zone img, .draggable-image img {
+            pointer-events: none;
+        }
+
+        /* Estilos de la barra de scroll personalizada (si aplica) */
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #718096; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #a0aec0 #f1f1f1; }
+
+        /* Estilos específicos del juego */
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 5xl; /* Aumentado ligeramente para acomodar imágenes más anchas */
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            gap: 1.5rem;
+        }
+        #draggable-container-wrapper, #drop-container-wrapper {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            border: 2px dashed #a0aec0;
+            box-sizing: border-box;
+        }
+        #draggable-container, #drop-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem; /* Mantener o ajustar según sea necesario */
+            min-height: 8rem; /* Ajustar altura mínima si es necesario */
+        }
+
+        /* --- AJUSTE CLAVE PARA 16:9 --- */
+        .draggable-image {
+            width: 9rem; /* Ancho base (ajustar según necesidad) */
+            height: calc(9rem * 9 / 16); /* Calcular altura para 16:9 */
+            border-radius: 0.5rem;
+            border: 2px solid #cbd5e0;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .draggable-image img {
+            display: block; /* Asegurar que la imagen se comporte como bloque */
+            width: 100%;   /* Hacer que la imagen llene el contenedor */
+            height: 100%;
+            object-fit: cover; /* O 'contain' si prefieres ver toda la imagen */
+            border-radius: calc(0.5rem - 2px); /* Ajustar radio para borde interno */
+        }
+        .drop-zone {
+            width: 9rem; /* Mismo ancho que draggable-image */
+            height: calc(9rem * 9 / 16); /* Misma altura que draggable-image */
+            border-radius: 0.5rem;
+            border: 2px dashed #a0aec0;
+            background-color: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+        .drop-zone span { /* Estilo del número inicial */
+            font-size: 1.5rem; /* Ajustar tamaño si es necesario */
+            font-weight: bold;
+            color: #cbd5e0;
+        }
+        /* --- FIN AJUSTE CLAVE --- */
+
+        /* Estilos de los botones (sin cambios) */
+        #check-button, #retry-button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        #check-button { background-color: #f59e0b; color: #ffffff; }
+        #check-button:hover:not(:disabled) { background-color: #d97706; transform: translateY(-2px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); }
+        #check-button:disabled { background-color: #fcd34d; cursor: not-allowed; }
+        #retry-button { background-color: #ef4444; color: #ffffff; display: none; }
+        #retry-button:hover { background-color: #dc2626; transform: translateY(-2px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); }
+
+        /* Estilos del mensaje de feedback (sin cambios) */
+        #feedback-message {
+            margin-top: 1rem; padding: 1rem; font-size: 1.1rem; font-weight: bold;
+            border-radius: 0.5rem; text-align: center; width: 100%; max-width: md;
+            min-height: 3rem; opacity: 0; transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+            border: 1px solid transparent; box-sizing: border-box;
+        }
+        .feedback-message.visible { opacity: 1; transform: translateY(0); }
+        .feedback-correct { background-color: #f0fdf4; color: #15803d; border-color: #16a34a; }
+        .feedback-incorrect { background-color: #fee2e2; color: #991b1b; border-color: #b91c1c; }
+        .feedback-win { background-color: #ecfdf5; color: #047857; border-color: #059669; }
+        .feedback-lose { background-color: #fefce8; color: #a16207; border-color: #ca8a04; }
+        .invisible { visibility: hidden; opacity: 0; }
+
+        /* Estilos del contenedor de puntuación (sin cambios) */
+        #score-container {
+            margin-top: 0.5rem; font-size: 1.1rem; font-weight: 600; color: #1e40af;
+            background-color: #eff6ff; padding: 0.5rem 1rem; border-radius: 0.5rem;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05); border: 1px solid #60a5fa;
+        }
+        #total-steps { color: #9333ea; }
+        #score { color: #1d4ed8; }
+    </style>
+</head>
+<body class="custom-scrollbar">
+    <div id="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-blue-800 text-center bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg w-full">
+            ¡Mi Aventura en el Pabellón!
+        </h1>
+        <div class="text-base md:text-lg text-gray-700 text-center bg-white/70 backdrop-blur-sm p-4 rounded-lg shadow-md w-full">
+            ¡Hola, soy Javier! ¿Me puedes ayudar? Descubre y ordena los momentos de mi aventura en el hospital, hoy ingresé a pabellón. ¡Arrastra las imágenes al recuadro en el orden que crees correcto!
+        </div>
+        <div id="score-container">
+            Puntuación: <span id="score" class="font-bold">0</span> / <span id="total-steps" class="font-bold">7</span>
+        </div>
+        <div id="draggable-container-wrapper">
+             <p class="text-center text-gray-600 font-medium mb-3">Arrastra desde aquí:</p>
+            <div id="draggable-container">
+                <span class="text-gray-400 italic">Cargando imágenes...</span>
+            </div>
+        </div>
+        <div id="drop-container-wrapper">
+             <p class="text-center text-gray-600 font-medium mb-3">Suelta aquí en orden:</p>
+            <div id="drop-container">
+                </div>
+        </div>
+        <div class="flex flex-col items-center gap-4 mt-5 w-full">
+            <div class="flex justify-center gap-4 w-full md:w-auto">
+                <button id="check-button">¡Listo!</button>
+                <button id="retry-button">Volver a Intentar</button>
+            </div>
+            <div id="feedback-message" class="invisible"></div>
+        </div>
+    </div>
+
+    <audio id="sound-correct"> <source src="sounds/drop_correct.mp3" type="audio/mpeg"> </audio>
+    <audio id="sound-incorrect"> <source src="sounds/drop_incorrect.mp3" type="audio/mpeg"> </audio>
+    <audio id="sound-win"> <source src="sounds/win.mp3" type="audio/mpeg"> </audio>
+    <audio id="sound-retry"> <source src="sounds/drop.mp3" type="audio/mpeg"> </audio> <audio id="sound-drop"> <source src="sounds/drop.mp3" type="audio/mpeg"> </audio> <audio id="sound-drag"> <source src="sounds/drag.mp3" type="audio/mpeg"> </audio> <audio id="sound-lose"> <source src="sounds/lose.mp3" type="audio/mpeg"> </audio>
+
+    <script>
+        // Referencias a los elementos del DOM
+        const draggableContainer = document.getElementById('draggable-container');
+        const dropContainer = document.getElementById('drop-container');
+        const checkButton = document.getElementById('check-button');
+        const retryButton = document.getElementById('retry-button');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const scoreDisplay = document.getElementById('score');
+        const totalStepsDisplay = document.getElementById('total-steps');
+
+        // --- AJUSTE: Referencias a todos los elementos de audio ---
+        const sounds = {
+            correct: document.getElementById('sound-correct'),
+            incorrect: document.getElementById('sound-incorrect'),
+            win: document.getElementById('sound-win'),
+            retry: document.getElementById('sound-retry'),
+            drop: document.getElementById('sound-drop'),
+            drag: document.getElementById('sound-drag'), // Añadido drag
+            lose: document.getElementById('sound-lose')
+        };
+        // --- FIN AJUSTE ---
+
+        // Secuencia correcta (sin cambios en IDs o estructura)
+        const correctSequence = [
+            { id: 'step1_gown', src: 'https://placehold.co/160x90/aed581/ffffff?text=1.+Bata', alt: 'Niño con bata quirúrgica' },
+            { id: 'step2_cap', src: 'https://placehold.co/160x90/64b5f6/ffffff?text=2.+Gorro', alt: 'Niño con gorro quirúrgico' },
+            { id: 'step3_operating_room', src: 'https://placehold.co/160x90/fff176/000000?text=3.+Quirófano', alt: 'Niño entrando al quirófano' },
+            { id: 'step4_sleeping_mask', src: 'https://placehold.co/160x90/81c784/ffffff?text=4.+Máscara', alt: 'Niño durmiendo con máscara de anestesia' },
+            { id: 'step5_surgeon_light', src: 'https://placehold.co/160x90/ffb74d/ffffff?text=5.+Luz', alt: 'Cirujano operando bajo la luz' },
+            { id: 'step6_bandaged', src: 'https://placehold.co/160x90/f06292/ffffff?text=6.+Vendaje', alt: 'Niño con herida cubierta después de operar' },
+            { id: 'step7_home', src: 'https://placehold.co/160x90/9575cd/ffffff?text=7.+Casa', alt: 'Niño recuperado camino a casa' }
+        ];
+
+        let shuffledSequence = [];
+        let droppedItems = [];
+        let score = 0;
+        let draggedElement = null;
+        let gameStarted = false;
+
+        // --- Funciones JS ---
+
+        function createDraggable(item) {
+            const div = document.createElement('div');
+            div.classList.add('draggable-image');
+            div.draggable = true;
+            div.dataset.id = item.id;
+
+            const img = document.createElement('img');
+            img.src = item.src;
+            img.alt = item.alt;
+            img.onerror = function() {
+                console.error(`Error loading image: ${item.src}`);
+                this.alt = `Error al cargar: ${item.alt}`;
+                this.src = `https://placehold.co/160x90/cccccc/ffffff?text=Error`;
+            };
+
+            div.appendChild(img);
+            div.addEventListener('dragstart', dragStart);
+            div.addEventListener('dragend', dragEnd);
+            return div;
+        }
+
+        function createDropZone(index) {
+            const div = document.createElement('div');
+            div.classList.add('drop-zone');
+            div.dataset.index = index;
+
+            const numberSpan = document.createElement('span');
+            numberSpan.textContent = index + 1;
+            div.appendChild(numberSpan);
+
+            div.addEventListener('dragover', dragOver);
+            div.addEventListener('dragenter', dragEnter);
+            div.addEventListener('dragleave', dragLeave);
+            div.addEventListener('drop', drop);
+            return div;
+        }
+
+        function dragStart(event) {
+            if (event.target.classList.contains('draggable-image')) {
+                draggedElement = event.target;
+                event.dataTransfer.setData('text/plain', draggedElement.dataset.id);
+                event.dataTransfer.effectAllowed = 'move';
+                setTimeout(() => draggedElement.classList.add('dragging'), 0);
+                playSound('drag'); // --- AJUSTE: Reproducir sonido al arrastrar ---
+            } else {
+                event.preventDefault();
+            }
+        }
+
+        function dragEnd(event) {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+            }
+            draggedElement = null;
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        }
+
+        function dragOver(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+        }
+
+        function dragEnter(event) {
+            event.preventDefault();
+            const target = event.target;
+            const dropZoneTarget = target.closest('.drop-zone');
+            if (dropZoneTarget && !dropZoneTarget.classList.contains('drag-over')) {
+                dropZoneTarget.classList.add('drag-over');
+            }
+             const draggableTarget = target.closest('#draggable-container');
+             if (draggableTarget && draggedElement && draggedElement.closest('.drop-zone')) {
+                // Opcional: Añadir feedback visual al contenedor origen
+             }
+        }
+
+        function dragLeave(event) {
+            const target = event.target;
+            const dropZoneTarget = target.closest('.drop-zone');
+            if (dropZoneTarget && !dropZoneTarget.contains(event.relatedTarget)) {
+                dropZoneTarget.classList.remove('drag-over');
+            }
+             const draggableTarget = target.closest('#draggable-container');
+             if (draggableTarget && !draggableTarget.contains(event.relatedTarget)) {
+                 // Opcional: Quitar feedback visual
+             }
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const target = event.target;
+            const dropZoneTarget = target.closest('.drop-zone');
+
+            if (dropZoneTarget && draggedElement) {
+                handleDropOnZone(dropZoneTarget);
+            } else if (target.closest('#draggable-container') && draggedElement && draggedElement.closest('.drop-zone')) {
+                 handleDropOnSource();
+            }
+             document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        }
+
+        function handleDropOnZone(dropZoneTarget) {
+             dropZoneTarget.classList.remove('drag-over');
+             const targetIndex = parseInt(dropZoneTarget.dataset.index);
+             const droppedId = draggedElement.dataset.id;
+             const existingImage = dropZoneTarget.querySelector('.draggable-image');
+
+             if (existingImage) {
+                 console.log("Zone occupied.");
+                 return; // No permitir soltar si ya está ocupada
+             }
+
+             const placeholder = dropZoneTarget.querySelector('span');
+             if (placeholder) {
+                 dropZoneTarget.removeChild(placeholder);
+             }
+
+             const sourceZone = draggedElement.closest('.drop-zone');
+             if (sourceZone) { // Venía de otra zona
+                 const sourceIndex = parseInt(sourceZone.dataset.index);
+                 droppedItems[sourceIndex] = null;
+                  const numberSpan = document.createElement('span');
+                  numberSpan.textContent = sourceIndex + 1;
+                  sourceZone.appendChild(numberSpan);
+                  sourceZone.removeChild(draggedElement);
+             } else { // Venía del contenedor original
+                  draggedElement.parentNode.removeChild(draggedElement);
+             }
+
+             dropZoneTarget.appendChild(draggedElement);
+             droppedItems[targetIndex] = droppedId;
+
+             playSound('correct'); // Sonido de colocar correctamente
+        }
+
+         function handleDropOnSource() {
+             const sourceZone = draggedElement.closest('.drop-zone');
+             const sourceIndex = parseInt(sourceZone.dataset.index);
+
+             sourceZone.removeChild(draggedElement);
+             const numberSpan = document.createElement('span');
+             numberSpan.textContent = sourceIndex + 1;
+             sourceZone.appendChild(numberSpan);
+
+             draggableContainer.appendChild(draggedElement);
+             droppedItems[sourceIndex] = null;
+
+             playSound('drop'); // --- AJUSTE: Usar sonido 'drop' al devolver ---
+         }
+
+
+        function shuffleSequence() {
+             shuffledSequence = [...correctSequence];
+             for (let i = shuffledSequence.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledSequence[i], shuffledSequence[j]] = [shuffledSequence[j], shuffledSequence[i]];
+             }
+        }
+
+        function populateDraggableContainer() {
+            draggableContainer.innerHTML = '';
+            shuffledSequence.forEach(item => {
+                const draggable = createDraggable(item);
+                draggableContainer.appendChild(draggable);
+            });
+        }
+
+        function populateDropContainer() {
+            dropContainer.innerHTML = '';
+            for (let i = 0; i < correctSequence.length; i++) {
+                const dropZone = createDropZone(i);
+                dropContainer.appendChild(dropZone);
+            }
+        }
+
+        function checkOrder() {
+            if (!gameStarted) return;
+
+            if (droppedItems.includes(null) || droppedItems.length < correctSequence.length) {
+                showMessage('¡Oh! Parece que faltan imágenes por colocar. ¡Arrastra todas!', 'incorrect');
+                playSound('incorrect'); // Sonido de incorrecto/incompleto
+                return;
+            }
+
+            let isCorrect = true;
+            score = 0;
+            for (let i = 0; i < correctSequence.length; i++) {
+                const correctId = correctSequence[i].id;
+                const droppedId = droppedItems[i];
+                if (droppedId === correctId) {
+                    score++;
+                } else {
+                    isCorrect = false;
+                }
+            }
+
+            scoreDisplay.textContent = score;
+
+            if (isCorrect) {
+                showMessage(`¡Felicidades! ¡Has ordenado todo correctamente! Puntuación: ${score}/${correctSequence.length}`, 'win');
+                playSound('win'); // Sonido de ganar
+                checkButton.disabled = true;
+                checkButton.style.cursor = 'not-allowed';
+                retryButton.style.display = 'inline-block';
+                 document.querySelectorAll('.draggable-image').forEach(img => img.draggable = false);
+            } else {
+                 if (score > 0) {
+                     showMessage(`¡Casi! Tienes ${score} de ${correctSequence.length} en el orden correcto. ¡Sigue intentando!`, 'lose');
+                     playSound('lose'); // --- AJUSTE: Usar sonido 'lose' para aciertos parciales ---
+                 } else {
+                     showMessage('¡Ups! El orden no es correcto. ¡Inténtalo de nuevo!', 'incorrect');
+                     playSound('incorrect'); // Sonido de incorrecto total
+                 }
+                 retryButton.style.display = 'inline-block';
+            }
+        }
+
+        function showMessage(message, type) {
+            feedbackMessage.textContent = message;
+            feedbackMessage.className = 'feedback-message'; // Reset
+            feedbackMessage.classList.add(`feedback-${type}`, 'visible');
+
+            setTimeout(() => {
+                feedbackMessage.classList.remove('visible');
+                 setTimeout(() => {
+                     if (!feedbackMessage.classList.contains('visible')) {
+                         feedbackMessage.classList.add('invisible');
+                         feedbackMessage.classList.remove(`feedback-${type}`);
+                     }
+                 }, 300);
+            }, 4000);
+        }
+
+        function resetGame() {
+            gameStarted = true;
+            score = 0;
+            scoreDisplay.textContent = score;
+            droppedItems = new Array(correctSequence.length).fill(null);
+
+            checkButton.disabled = false;
+            checkButton.style.cursor = 'pointer';
+            retryButton.style.display = 'none';
+            feedbackMessage.className = 'feedback-message invisible';
+
+            shuffleSequence();
+            populateDraggableContainer();
+            populateDropContainer();
+
+            playSound('retry'); // Sonido al reiniciar/reintentar
+        }
+
+        function playSound(soundId) {
+             const sound = sounds[soundId]; // Usar el objeto 'sounds' actualizado
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(error => {
+                    // Silenciar errores comunes si el usuario no ha interactuado aún
+                    if (error.name !== 'NotAllowedError') {
+                       console.warn(`No se pudo reproducir el sonido "${soundId}":`, error.message);
+                    }
+                });
+            } else {
+                console.warn(`Sonido "${soundId}" no encontrado.`);
+            }
+        }
+
+        window.onload = function() {
+            totalStepsDisplay.textContent = correctSequence.length;
+            resetGame();
+            checkButton.addEventListener('click', checkOrder);
+            retryButton.addEventListener('click', resetGame);
+
+             draggableContainer.addEventListener('dragover', dragOver);
+             draggableContainer.addEventListener('dragenter', dragEnter);
+             draggableContainer.addEventListener('dragleave', dragLeave);
+             draggableContainer.addEventListener('drop', drop);
+        };
+    </script>
+</body>
+</html>
