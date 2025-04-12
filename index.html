@@ -197,7 +197,10 @@
     <audio id="sound-correct"> <source src="sounds/drop_correct.mp3" type="audio/mpeg"> </audio>
     <audio id="sound-incorrect"> <source src="sounds/drop_incorrect.mp3" type="audio/mpeg"> </audio>
     <audio id="sound-win"> <source src="sounds/win.mp3" type="audio/mpeg"> </audio>
-    <audio id="sound-retry"> <source src="sounds/drop.mp3" type="audio/mpeg"> </audio> <audio id="sound-drop"> <source src="sounds/drop.mp3" type="audio/mpeg"> </audio> <audio id="sound-drag"> <source src="sounds/drag.mp3" type="audio/mpeg"> </audio> <audio id="sound-lose"> <source src="sounds/lose.mp3" type="audio/mpeg"> </audio>
+    <audio id="sound-retry"> <source src="sounds/drop.mp3" type="audio/mpeg"> </audio>
+    <audio id="sound-drop"> <source src="sounds/drop.mp3" type="audio/mpeg"> </audio>
+    <audio id="sound-drag"> <source src="sounds/drag.mp3" type="audio/mpeg"> </audio>
+    <audio id="sound-lose"> <source src="sounds/lose.mp3" type="audio/mpeg"> </audio>
 
     <script>
         // Referencias a los elementos del DOM
@@ -209,28 +212,49 @@
         const scoreDisplay = document.getElementById('score');
         const totalStepsDisplay = document.getElementById('total-steps');
 
-        // --- AJUSTE: Referencias a todos los elementos de audio ---
+        // Referencias a todos los elementos de audio
         const sounds = {
             correct: document.getElementById('sound-correct'),
             incorrect: document.getElementById('sound-incorrect'),
             win: document.getElementById('sound-win'),
             retry: document.getElementById('sound-retry'),
             drop: document.getElementById('sound-drop'),
-            drag: document.getElementById('sound-drag'), // Añadido drag
+            drag: document.getElementById('sound-drag'),
             lose: document.getElementById('sound-lose')
         };
-        // --- FIN AJUSTE ---
 
-        // Secuencia correcta (sin cambios en IDs o estructura)
+        // --- INICIO: SECUENCIA CORRECTA ACTUALIZADA ---
         const correctSequence = [
-            { id: 'step1_gown', src: 'https://placehold.co/160x90/aed581/ffffff?text=1.+Bata', alt: 'Niño con bata quirúrgica' },
-            { id: 'step2_cap', src: 'https://placehold.co/160x90/64b5f6/ffffff?text=2.+Gorro', alt: 'Niño con gorro quirúrgico' },
-            { id: 'step3_operating_room', src: 'https://placehold.co/160x90/fff176/000000?text=3.+Quirófano', alt: 'Niño entrando al quirófano' },
-            { id: 'step4_sleeping_mask', src: 'https://placehold.co/160x90/81c784/ffffff?text=4.+Máscara', alt: 'Niño durmiendo con máscara de anestesia' },
-            { id: 'step5_surgeon_light', src: 'https://placehold.co/160x90/ffb74d/ffffff?text=5.+Luz', alt: 'Cirujano operando bajo la luz' },
-            { id: 'step6_bandaged', src: 'https://placehold.co/160x90/f06292/ffffff?text=6.+Vendaje', alt: 'Niño con herida cubierta después de operar' },
-            { id: 'step7_home', src: 'https://placehold.co/160x90/9575cd/ffffff?text=7.+Casa', alt: 'Niño recuperado camino a casa' }
+            // Paso 1: Corresponde a la bata quirúrgica
+            { id: 'step1_gown', src: 'img/child_gown.png', alt: 'Niño con bata quirúrgica' },
+
+            // Paso 2: Corresponde al gorro quirúrgico
+            { id: 'step2_cap', src: 'img/child_cap.png', alt: 'Niño con gorro quirúrgico' },
+
+            // Paso 3: Corresponde a la entrada al quirófano
+            { id: 'step3_operating_room', src: 'img/child_operating_room.png', alt: 'Niño entrando al quirófano' },
+
+            // Paso 4: Corresponde a la máscara de anestesia
+            { id: 'step4_sleeping_mask', src: 'img/child_sleeping_mask.png', alt: 'Niño durmiendo con máscara de anestesia' },
+
+            // Paso 5: Corresponde a la luz del cirujano
+            { id: 'step5_surgeon_light', src: 'img/surgeon_light.png', alt: 'Cirujano operando bajo la luz' },
+
+            // Paso 6: Corresponde al niño vendado
+            { id: 'step6_bandaged', src: 'img/child_bandaged.png', alt: 'Niño con herida cubierta después de operar' },
+
+            // Paso 7: Corresponde a la vuelta a casa
+            { id: 'step7_home', src: 'img/child_home.png', alt: 'Niño recuperado camino a casa' }
         ];
+
+        // --- NOTA MUY IMPORTANTE ---
+        // He asumido que tus imágenes son archivos .png (ej: child_gown.png).
+        // Si tus archivos tienen otra extensión (como .jpg, .jpeg, .gif, etc.),
+        // DEBES cambiar el ".png" en cada línea de 'src' por la extensión correcta.
+        // Por ejemplo, si fuera un JPG, sería: src: 'img/child_gown.jpg'
+        // ¡Revisa esto cuidadosamente en tu carpeta 'img'!
+        // --- FIN: SECUENCIA CORRECTA ACTUALIZADA ---
+
 
         let shuffledSequence = [];
         let droppedItems = [];
@@ -247,12 +271,18 @@
             div.dataset.id = item.id;
 
             const img = document.createElement('img');
-            img.src = item.src;
+            img.src = item.src; // Usará la ruta relativa 'img/archivo.png'
             img.alt = item.alt;
+            // Manejador de errores si la imagen no carga
             img.onerror = function() {
-                console.error(`Error loading image: ${item.src}`);
+                console.error(`Error loading image: ${item.src}. Check path and filename (case sensitive) and ensure GitHub Pages is active.`);
                 this.alt = `Error al cargar: ${item.alt}`;
-                this.src = `https://placehold.co/160x90/cccccc/ffffff?text=Error`;
+                 // Placeholder visual de error
+                div.innerHTML = `<span style="color: red; font-size: 0.7rem; text-align: center; padding: 5px;">Error al cargar<br>${item.src.split('/').pop()}</span>`;
+                div.style.backgroundColor = '#fee2e2'; // Fondo rojo claro
+                div.style.alignItems = 'center';
+                div.style.justifyContent = 'center';
+                div.style.border = '2px solid red';
             };
 
             div.appendChild(img);
@@ -283,7 +313,7 @@
                 event.dataTransfer.setData('text/plain', draggedElement.dataset.id);
                 event.dataTransfer.effectAllowed = 'move';
                 setTimeout(() => draggedElement.classList.add('dragging'), 0);
-                playSound('drag'); // --- AJUSTE: Reproducir sonido al arrastrar ---
+                playSound('drag');
             } else {
                 event.preventDefault();
             }
@@ -311,7 +341,7 @@
             }
              const draggableTarget = target.closest('#draggable-container');
              if (draggableTarget && draggedElement && draggedElement.closest('.drop-zone')) {
-                // Opcional: Añadir feedback visual al contenedor origen
+                 // Opcional: Añadir feedback visual al contenedor origen
              }
         }
 
@@ -331,13 +361,15 @@
             event.preventDefault();
             const target = event.target;
             const dropZoneTarget = target.closest('.drop-zone');
+            const draggableContainerTarget = target.closest('#draggable-container'); // Permitir soltar de vuelta
 
             if (dropZoneTarget && draggedElement) {
                 handleDropOnZone(dropZoneTarget);
-            } else if (target.closest('#draggable-container') && draggedElement && draggedElement.closest('.drop-zone')) {
-                 handleDropOnSource();
+            } else if (draggableContainerTarget && draggedElement && draggedElement.closest('.drop-zone')) {
+                // Si se suelta sobre el contenedor de origen Y viene de una drop-zone
+                handleDropOnSource();
             }
-             document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
         }
 
         function handleDropOnZone(dropZoneTarget) {
@@ -347,69 +379,130 @@
              const existingImage = dropZoneTarget.querySelector('.draggable-image');
 
              if (existingImage) {
-                 console.log("Zone occupied.");
-                 return; // No permitir soltar si ya está ocupada
+                 // Intercambiar si la zona ya tiene una imagen
+                 const sourceZone = draggedElement.closest('.drop-zone');
+                 const originContainer = document.getElementById('draggable-container');
+
+                 // Mover la imagen existente de vuelta a su origen (o a la zona de donde vino la arrastrada)
+                 if (sourceZone) {
+                     sourceZone.appendChild(existingImage); // Mover a la zona origen de la arrastrada
+                 } else {
+                     originContainer.appendChild(existingImage); // Mover al contenedor principal
+                 }
+                 // Actualizar droppedItems para la imagen que se movió
+                 const existingIndex = droppedItems.findIndex(id => id === existingImage.dataset.id);
+                 if (existingIndex !== -1) {
+                      if (sourceZone) {
+                        droppedItems[parseInt(sourceZone.dataset.index)] = existingImage.dataset.id;
+                      } else {
+                        // Si vuelve al contenedor principal, no debería estar en droppedItems
+                         // (pero por si acaso, limpiamos su posición anterior si la tuviera)
+                        droppedItems[existingIndex] = null;
+                      }
+                 }
+                 // Añadir número si la zona origen queda vacía
+                 if(sourceZone){
+                     const spanCheck = sourceZone.querySelector('span');
+                     if (!spanCheck && !sourceZone.querySelector('.draggable-image')){
+                        const numberSpan = document.createElement('span');
+                        numberSpan.textContent = parseInt(sourceZone.dataset.index) + 1;
+                        sourceZone.appendChild(numberSpan);
+                     }
+                 }
+
+
+             } else {
+                // La zona está vacía, quitar el número si existe
+                const placeholder = dropZoneTarget.querySelector('span');
+                if (placeholder) {
+                    dropZoneTarget.removeChild(placeholder);
+                }
              }
 
-             const placeholder = dropZoneTarget.querySelector('span');
-             if (placeholder) {
-                 dropZoneTarget.removeChild(placeholder);
-             }
-
-             const sourceZone = draggedElement.closest('.drop-zone');
-             if (sourceZone) { // Venía de otra zona
-                 const sourceIndex = parseInt(sourceZone.dataset.index);
-                 droppedItems[sourceIndex] = null;
-                  const numberSpan = document.createElement('span');
-                  numberSpan.textContent = sourceIndex + 1;
-                  sourceZone.appendChild(numberSpan);
-                  sourceZone.removeChild(draggedElement);
-             } else { // Venía del contenedor original
-                  draggedElement.parentNode.removeChild(draggedElement);
-             }
-
+             // Mover el elemento arrastrado a la nueva zona
+             const sourceZone = draggedElement.closest('.drop-zone'); // ¿Viene de otra drop-zone?
              dropZoneTarget.appendChild(draggedElement);
              droppedItems[targetIndex] = droppedId;
 
-             playSound('correct'); // Sonido de colocar correctamente
+             // Si venía de otra drop-zone, limpiar esa zona y actualizar droppedItems
+             if (sourceZone && sourceZone !== dropZoneTarget) {
+                 const sourceIndex = parseInt(sourceZone.dataset.index);
+                 if (!existingImage){ // Solo limpiar si no hubo intercambio
+                    droppedItems[sourceIndex] = null;
+                    // Añadir el número de vuelta a la zona origen si quedó vacía
+                    const numberSpan = document.createElement('span');
+                    numberSpan.textContent = sourceIndex + 1;
+                    sourceZone.appendChild(numberSpan);
+                 }
+             }
+
+             playSound('correct'); // Sonido de colocar
         }
 
-         function handleDropOnSource() {
-             const sourceZone = draggedElement.closest('.drop-zone');
-             const sourceIndex = parseInt(sourceZone.dataset.index);
+        function handleDropOnSource() {
+            const sourceZone = draggedElement.closest('.drop-zone'); // La zona de donde viene
+            const sourceIndex = parseInt(sourceZone.dataset.index);
 
-             sourceZone.removeChild(draggedElement);
-             const numberSpan = document.createElement('span');
-             numberSpan.textContent = sourceIndex + 1;
-             sourceZone.appendChild(numberSpan);
+            // Quitar de la drop-zone
+            sourceZone.removeChild(draggedElement);
+            // Añadir el número de vuelta
+            const numberSpan = document.createElement('span');
+            numberSpan.textContent = sourceIndex + 1;
+            sourceZone.appendChild(numberSpan);
 
-             draggableContainer.appendChild(draggedElement);
-             droppedItems[sourceIndex] = null;
+            // Añadir de vuelta al contenedor draggable
+            draggableContainer.appendChild(draggedElement);
+            // Quitar de la lista de items soltados
+            droppedItems[sourceIndex] = null;
 
-             playSound('drop'); // --- AJUSTE: Usar sonido 'drop' al devolver ---
-         }
+            playSound('drop'); // Sonido de devolver
+       }
 
 
         function shuffleSequence() {
              shuffledSequence = [...correctSequence];
              for (let i = shuffledSequence.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffledSequence[i], shuffledSequence[j]] = [shuffledSequence[j], shuffledSequence[i]];
+                 const j = Math.floor(Math.random() * (i + 1));
+                 [shuffledSequence[i], shuffledSequence[j]] = [shuffledSequence[j], shuffledSequence[i]];
              }
         }
 
         function populateDraggableContainer() {
-            draggableContainer.innerHTML = '';
+            draggableContainer.innerHTML = ''; // Limpiar
+            // Filtrar las imágenes que ya están en drop-zones (si se llama durante el juego)
+            const itemsInDropZones = new Set(droppedItems.filter(id => id !== null));
             shuffledSequence.forEach(item => {
-                const draggable = createDraggable(item);
-                draggableContainer.appendChild(draggable);
+                if (!itemsInDropZones.has(item.id)) {
+                    const draggable = createDraggable(item);
+                    draggableContainer.appendChild(draggable);
+                }
             });
+            // Añadir mensaje si está vacío
+             if (draggableContainer.children.length === 0 && itemsInDropZones.size === correctSequence.length) {
+                 draggableContainer.innerHTML = '<span class="text-gray-400 italic">¡Todas las imágenes están en las zonas de destino!</span>';
+             } else if (draggableContainer.children.length === 0 && itemsInDropZones.size === 0) {
+                 // Caso inicial si algo falla al cargar
+                  draggableContainer.innerHTML = '<span class="text-red-500 italic">Error: No se pudieron cargar imágenes iniciales.</span>';
+             }
         }
 
         function populateDropContainer() {
-            dropContainer.innerHTML = '';
+            dropContainer.innerHTML = ''; // Limpiar
             for (let i = 0; i < correctSequence.length; i++) {
                 const dropZone = createDropZone(i);
+                // Si hay un item guardado para esta posición, ponerlo
+                if (droppedItems[i] !== null) {
+                    const itemData = correctSequence.find(item => item.id === droppedItems[i]);
+                    if (itemData) {
+                        const draggable = createDraggable(itemData);
+                        // Quitar el número antes de añadir la imagen
+                        const numberSpan = dropZone.querySelector('span');
+                        if (numberSpan) {
+                            dropZone.removeChild(numberSpan);
+                        }
+                        dropZone.appendChild(draggable);
+                    }
+                }
                 dropContainer.appendChild(dropZone);
             }
         }
@@ -417,12 +510,16 @@
         function checkOrder() {
             if (!gameStarted) return;
 
-            if (droppedItems.includes(null) || droppedItems.length < correctSequence.length) {
+            // Verificar si todas las zonas están llenas
+            const allDropped = droppedItems.every(item => item !== null);
+
+            if (!allDropped) {
                 showMessage('¡Oh! Parece que faltan imágenes por colocar. ¡Arrastra todas!', 'incorrect');
-                playSound('incorrect'); // Sonido de incorrecto/incompleto
+                playSound('incorrect');
                 return;
             }
 
+            // Si todas están llenas, verificar el orden
             let isCorrect = true;
             score = 0;
             for (let i = 0; i < correctSequence.length; i++) {
@@ -439,34 +536,51 @@
 
             if (isCorrect) {
                 showMessage(`¡Felicidades! ¡Has ordenado todo correctamente! Puntuación: ${score}/${correctSequence.length}`, 'win');
-                playSound('win'); // Sonido de ganar
+                playSound('win');
                 checkButton.disabled = true;
                 checkButton.style.cursor = 'not-allowed';
                 retryButton.style.display = 'inline-block';
-                 document.querySelectorAll('.draggable-image').forEach(img => img.draggable = false);
+                 document.querySelectorAll('.draggable-image').forEach(img => img.draggable = false); // Deshabilitar drag al ganar
+                 document.querySelectorAll('.drop-zone').forEach(zone => { // Quitar listeners de drop zones
+                     zone.removeEventListener('dragover', dragOver);
+                     zone.removeEventListener('dragenter', dragEnter);
+                     zone.removeEventListener('dragleave', dragLeave);
+                     zone.removeEventListener('drop', drop);
+                 });
             } else {
                  if (score > 0) {
-                     showMessage(`¡Casi! Tienes ${score} de ${correctSequence.length} en el orden correcto. ¡Sigue intentando!`, 'lose');
-                     playSound('lose'); // --- AJUSTE: Usar sonido 'lose' para aciertos parciales ---
+                    showMessage(`¡Casi! Tienes ${score} de ${correctSequence.length} en el orden correcto. ¡Sigue intentando!`, 'lose');
+                    playSound('lose');
                  } else {
-                     showMessage('¡Ups! El orden no es correcto. ¡Inténtalo de nuevo!', 'incorrect');
-                     playSound('incorrect'); // Sonido de incorrecto total
+                    showMessage('¡Ups! El orden no es correcto. ¡Inténtalo de nuevo!', 'incorrect');
+                    playSound('incorrect');
                  }
-                 retryButton.style.display = 'inline-block';
+                 retryButton.style.display = 'inline-block'; // Mostrar reintentar si es incorrecto
             }
         }
 
         function showMessage(message, type) {
             feedbackMessage.textContent = message;
-            feedbackMessage.className = 'feedback-message'; // Reset
-            feedbackMessage.classList.add(`feedback-${type}`, 'visible');
+            feedbackMessage.className = 'feedback-message'; // Reset classes
+            feedbackMessage.classList.add(`feedback-${type}`, 'visible'); // Add type and visibility
 
-            setTimeout(() => {
+            // Clear previous timeouts if any to prevent premature hiding
+            if (feedbackMessage.timeoutId) {
+                clearTimeout(feedbackMessage.timeoutId);
+            }
+            if (feedbackMessage.invisibleTimeoutId) {
+                 clearTimeout(feedbackMessage.invisibleTimeoutId);
+            }
+
+            // Hide after 4 seconds
+            feedbackMessage.timeoutId = setTimeout(() => {
                 feedbackMessage.classList.remove('visible');
-                 setTimeout(() => {
+                 // Set to invisible after transition ends (300ms)
+                 feedbackMessage.invisibleTimeoutId = setTimeout(() => {
+                     // Check again if it should be hidden (e.g., another message wasn't shown immediately)
                      if (!feedbackMessage.classList.contains('visible')) {
                          feedbackMessage.classList.add('invisible');
-                         feedbackMessage.classList.remove(`feedback-${type}`);
+                         feedbackMessage.classList.remove(`feedback-${type}`); // Clean up type class
                      }
                  }, 300);
             }, 4000);
@@ -476,45 +590,63 @@
             gameStarted = true;
             score = 0;
             scoreDisplay.textContent = score;
-            droppedItems = new Array(correctSequence.length).fill(null);
+            droppedItems = new Array(correctSequence.length).fill(null); // Reset dropped items tracking
 
             checkButton.disabled = false;
             checkButton.style.cursor = 'pointer';
-            retryButton.style.display = 'none';
-            feedbackMessage.className = 'feedback-message invisible';
+            retryButton.style.display = 'none'; // Hide retry button
+            feedbackMessage.className = 'feedback-message invisible'; // Hide feedback message
 
-            shuffleSequence();
-            populateDraggableContainer();
-            populateDropContainer();
+            shuffleSequence(); // Shuffle the items
+            populateDropContainer(); // Reset drop zones (will be empty now)
+            populateDraggableContainer(); // Populate draggable items area
 
-            playSound('retry'); // Sonido al reiniciar/reintentar
+            // Re-enable draggable and re-add listeners to drop zones if they were removed on win
+            document.querySelectorAll('.draggable-image').forEach(img => img.draggable = true);
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.removeEventListener('dragover', dragOver); // Remove first to avoid duplicates
+                zone.removeEventListener('dragenter', dragEnter);
+                zone.removeEventListener('dragleave', dragLeave);
+                zone.removeEventListener('drop', drop);
+                zone.addEventListener('dragover', dragOver); // Add listeners back
+                zone.addEventListener('dragenter', dragEnter);
+                zone.addEventListener('dragleave', dragLeave);
+                zone.addEventListener('drop', drop);
+            });
+
+
+            playSound('retry');
         }
 
         function playSound(soundId) {
-             const sound = sounds[soundId]; // Usar el objeto 'sounds' actualizado
-            if (sound) {
-                sound.currentTime = 0;
-                sound.play().catch(error => {
-                    // Silenciar errores comunes si el usuario no ha interactuado aún
-                    if (error.name !== 'NotAllowedError') {
-                       console.warn(`No se pudo reproducir el sonido "${soundId}":`, error.message);
-                    }
-                });
-            } else {
-                console.warn(`Sonido "${soundId}" no encontrado.`);
-            }
+             const sound = sounds[soundId];
+             if (sound) {
+                 sound.currentTime = 0; // Rewind to start
+                 sound.play().catch(error => {
+                     // Common error if user hasn't interacted with the page yet. Can be ignored.
+                     if (error.name !== 'NotAllowedError') {
+                         console.warn(`Could not play sound "${soundId}":`, error.message);
+                     }
+                 });
+             } else {
+                 console.warn(`Sound "${soundId}" not found.`);
+             }
         }
 
+        // Initial setup when the window loads
         window.onload = function() {
-            totalStepsDisplay.textContent = correctSequence.length;
-            resetGame();
+            totalStepsDisplay.textContent = correctSequence.length; // Set total steps display
+            resetGame(); // Initialize and start the game
+
+            // Add event listeners to buttons
             checkButton.addEventListener('click', checkOrder);
             retryButton.addEventListener('click', resetGame);
 
-             draggableContainer.addEventListener('dragover', dragOver);
-             draggableContainer.addEventListener('dragenter', dragEnter);
-             draggableContainer.addEventListener('dragleave', dragLeave);
-             draggableContainer.addEventListener('drop', drop);
+            // Add drag listeners to the main draggable container for returning items
+            draggableContainer.addEventListener('dragover', dragOver);
+            draggableContainer.addEventListener('dragenter', dragEnter); // Basic enter/leave for visual feedback maybe
+            draggableContainer.addEventListener('dragleave', dragLeave);
+            draggableContainer.addEventListener('drop', drop); // Handle dropping back into the container
         };
     </script>
 </body>
